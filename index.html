@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hệ thống chấm điểm phát âm tiếng Anh (Phiên bản đồng bộ đám mây)</title>
+<style>
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+:root {
+  --primary: #3498db;
+  --success: #2ecc71;
+  --warning: #f1c40f;
+  --danger: #e74c3c;
+  --purple: #8e44ad;
+  --orange: #e67e22;
+  --teal: #1abc9c;
+  --dark: #1e293b;
+  --light-bg: #f8fafc;
+  --border: #cbd5e1;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f0f4f8;
+  color: var(--dark);
+  margin: 0;
+  padding: 30px 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.inapp-warning {
+  display: none;
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  width: 100%;
+  max-width: 700px;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+}
+.instructor-card {
+  background: white;
+  padding: 30px 25px;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 700px;
+  position: relative;
+}
+.header-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-bottom: 20px;
+}
+h1 {
+  text-align: center;
+  color: var(--dark);
+  font-size: 24px;
+  margin: 0;
+  font-weight: 700;
+}
+.btn-teacher-lock {
+  position: absolute;
+  right: 0;
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-teacher-lock:hover {
+  background: #f1f5f9;
+  color: var(--dark);
+}
+.teacher-panel {
+  display: none;
+  background: #eef6fb;
+  border: 1px solid #bee3f8;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+.panel-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.teacher-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.btn-file-label {
+  background-color: var(--teal);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-block;
+  transition: background 0.2s;
+}
+.btn-file-label:hover {
+  background-color: #16a085;
+}
+.btn-random {
+  background-color: var(--orange);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-random:hover {
+  background-color: #d35400;
+}
+.bank-status {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 8px;
+}
+.student-info-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  background: var(--light-bg);
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+  width: 100%;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  width: 100%;
+}
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--dark);
+  white-space: nowrap;
+}
+.form-group label::after {
+  content: " *";
+  color: var(--danger);
+}
+.form-group input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  outline: none;
+}
+.form-group input:focus {
+  border-color: var(--primary);
+}
+/* Khu vực hiển thị câu mẫu */
+.sentence-box {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.8;
+  padding: 24px 28px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 2px solid #cbd5e1;
+  margin-bottom: 20px;
+  text-align: left;
+  word-break: break-word;
+  letter-spacing: 0.01em;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+/* Đánh dấu từ vựng */
+.w-unit {
+  display: inline-block;
+  margin: 2px 1px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
+}
+.w-unit.pending {
+  color: #334155;
+  background: transparent;
+  padding: 2px 0px;
+  margin: 0;
+}
+.w-unit.correct {
+  color: #ffffff;
+  background-color: var(--success);
+}
+.w-unit.wrong {
+  color: #ffffff;
+  background-color: var(--danger);
+}
+.w-unit.missing {
+  color: #ffffff;
+  background-color: var(--warning);
+}
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.dot { width: 10px; height: 10px; border-radius: 3px; }
+.control-panel {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+button {
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.2s;
+}
+button:active { transform: scale(0.98); }
+.btn-audio { background: #e2e8f0; color: var(--dark); }
+.btn-mic { background: var(--primary); color: white; }
+.btn-next { background: var(--purple); color: white; }
+.btn-mic.recording {
+  background: var(--danger);
+  animation: pulse 1s infinite alternate;
+}
+button:disabled {
+  background-color: #cbd5e1;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+.score-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  background: var(--light-bg);
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+}
+.score-card { padding: 5px; }
+.score-num { font-size: 26px; font-weight: 800; margin-top: 4px; }
+.score-num.count { color: var(--purple); }
+.score-num.complete { color: var(--success); }
+.score-num.total { color: var(--primary); }
+.feedback-msg {
+  grid-column: span 3;
+  margin-top: 8px;
+  font-weight: bold;
+  color: #475569;
+  border-top: 1px dashed #cbd5e1;
+  padding-top: 12px;
+  line-height: 1.5;
+  font-size: 14px;
+}
+@keyframes pulse { from { opacity: 1; } to { opacity: 0.7; } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 500px) {
+  .sentence-box { font-size: 22px; padding: 18px 20px; }
+  .student-info-form { grid-template-columns: 1fr; }
+  .score-board { grid-template-columns: 1fr; }
+  .feedback-msg { grid-column: span 1; }
+}
+</style>
+</head>
+<body>
+
+<div class="inapp-warning" id="inAppWarning">
+  Hệ thống phát hiện bạn đang mở bằng trình duyệt tích hợp trong ứng dụng.<br>
+  Vui lòng nhấn nút <strong>"⋮"</strong> hoặc <strong>"Chia sẻ"</strong> ở góc trên bên phải, chọn <strong>"Mở bằng Chrome / Safari"</strong> để cấp quyền truy cập micro.
+</div>
+
+<div class="instructor-card">
+  <div class="header-container">
+    <h1>Hệ thống chấm điểm phát âm học sinh 阮氏海清 </h1>
+    <button class="btn-teacher-lock" id="btnTeacherLock">Mở khóa giáo viên</button>
+  </div>
+
+  <!-- Khu vực thiết lập bộ đề của giáo viên (Hiển thị sau khi xác thực) -->
+  <div class="teacher-panel" id="teacherPanel">
+    <div class="panel-title">Chuyển đổi & Tùy chỉnh bộ đề (Chức năng giáo viên)</div>
+    <div class="teacher-actions">
+      <button class="btn-random" id="btnRandom5">Tải ngẫu nhiên 5 câu giao tiếp</button>
+      <label class="btn-file-label" for="fileInput">Tải lên tệp text.txt tùy chỉnh</label>
+      <input type="file" id="fileInput" accept=".txt" style="display: none;">
+    </div>
+    <div class="bank-status" id="bankStatus">Bộ đề hiện tại: Bộ danh ngôn mặc định (Tổng 6 câu)</div>
+  </div>
+
+  <!-- 1. Khu vực điền thông tin học sinh -->
+  <div class="student-info-form">
+    <div class="form-group">
+      <label for="studentClass">Lớp</label>
+      <input type="text" id="studentClass" placeholder="Ví dụ: Anh A1" required>
+    </div>
+    <div class="form-group">
+      <label for="studentId">Mã số HS</label>
+      <input type="text" id="studentId" placeholder="Ví dụ: 1090123" required>
+    </div>
+    <div class="form-group">
+      <label for="studentName">Họ và tên</label>
+      <input type="text" id="studentName" placeholder="Ví dụ: Nguyễn Văn A" required>
+    </div>
+  </div>
+
+  <!-- 2. Khu vực chú thích màu sắc -->
+  <div class="legend">
+    <div class="legend-item"><span class="dot" style="background: #7f8c8d"></span> Chưa luyện tập</div>
+    <div class="legend-item"><span class="dot" style="background: var(--success)"></span> Phát âm đúng</div>
+    <div class="legend-item"><span class="dot" style="background: var(--danger)"></span> Phát âm sai</div>
+    <div class="legend-item"><span class="dot" style="background: var(--warning)"></span> Đọc thiếu từ</div>
+  </div>
+
+  <!-- 3. Khu vực hiển thị câu mục tiêu -->
+  <div class="sentence-box" id="sentenceBox"></div>
+
+  <!-- 4. Khu vực nút điều khiển -->
+  <div class="control-panel">
+    <button class="btn-audio" id="btnAudio">Nghe đọc mẫu (Giọng Mỹ)</button>
+    <button class="btn-mic" id="btnMic">Bắt đầu ghi âm luyện tập</button>
+    <button class="btn-next" id="btnNext">Chuyển câu tiếp theo</button>
+  </div>
+
+  <!-- 5. Bảng điểm và phản hồi -->
+  <div class="score-board">
+    <div class="score-card">
+      <div>Số lần đã thử</div>
+      <div class="score-num count" id="attemptCountDisplay">0 lần</div>
+    </div>
+    <div class="score-card">
+      <div>Độ hoàn thành câu</div>
+      <div class="score-num complete" id="completionScore">0%</div>
+    </div>
+    <div class="score-card">
+      <div>Độ chính xác phát âm</div>
+      <div class="score-num total" id="accuracyScore">0%</div>
+    </div>
+    <div class="feedback-msg" id="feedbackMsg">Vui lòng điền đầy đủ thông tin học sinh ở trên trước khi bắt đầu luyện tập.</div>
+  </div>
+</div>
+
+<script>
+// Email giáo viên được cấp quyền
+const AUTHORIZED_TEACHER_EMAIL = "audreyshih32@gm.chihlee.edu.tw";
+
+// Phát hiện trình duyệt tích hợp trong ứng dụng (LINE, Messenger, Teams, v.v.)
+const ua = navigator.userAgent || navigator.vendor || window.opera;
+const isInApp = (ua.indexOf("Line") > -1) || (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) ||
+                (ua.indexOf("Instagram") > -1) || (ua.indexOf("Teams") > -1);
+if (isInApp) {
+  document.getElementById('inAppWarning').style.display = 'block';
+}
+
+// THAY THẾ URL DƯỚI ĐÂY BẰNG GAS_URL CỦA BẠN
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwJjv63IcWrl-ayVsbnXWFEWJzTnC6jorSlkvTe-4Ddnfn4WXgpCgvnMeOH4YUs8mur7g/exec";
+
+// Kho dữ liệu tiếng Anh giao tiếp hàng ngày
+const dailyEnglishPool = [
+  "How's it going with you today?",
+  "Could you give me a quick hand with this?",
+  "Sorry, I didn't quite catch what you said.",
+  "Let's grab a cup of coffee sometime this week.",
+  "Do you happen to know where the restroom is?",
+  "That sounds like a wonderful idea!",
+  "I'll get back to you as soon as possible.",
+  "What do you feel like eating for dinner tonight?",
+  "Take your time, there is no rush at all.",
+  "Thanks a lot for taking the time to help me."
+];
+
+// Bộ đề mặc định
+let sentenceBank = [
+  "Practice makes perfect.",
+  "Where there is a will, there is a way.",
+  "The quick brown fox jumps over the lazy dog.",
+  "Action speaks louder than words.",
+  "Honesty is the best policy.",
+  "Better late than never."
+];
+
+let currentSentenceIndex = 0;
+let targetSentence = sentenceBank[currentSentenceIndex];
+let targetWords = [];
+let displayWords = [];
+let attemptCount = 0;
+
+const studentClass = document.getElementById('studentClass');
+const studentId = document.getElementById('studentId');
+const studentName = document.getElementById('studentName');
+const sentenceBox = document.getElementById('sentenceBox');
+const btnAudio = document.getElementById('btnAudio');
+const btnMic = document.getElementById('btnMic');
+const btnNext = document.getElementById('btnNext');
+const btnTeacherLock = document.getElementById('btnTeacherLock');
+const teacherPanel = document.getElementById('teacherPanel');
+const btnRandom5 = document.getElementById('btnRandom5');
+const fileInput = document.getElementById('fileInput');
+const bankStatus = document.getElementById('bankStatus');
+const attemptCountDisplay = document.getElementById('attemptCountDisplay');
+const completionScore = document.getElementById('completionScore');
+const accuracyScore = document.getElementById('accuracyScore');
+const feedbackMsg = document.getElementById('feedbackMsg');
+
+// Kiểm tra trạng thái mở khóa của giáo viên
+if (localStorage.getItem('teacherUnlocked') === 'true') {
+  teacherPanel.style.display = 'block';
+  btnTeacherLock.innerText = "Giáo viên đã mở khóa";
+}
+
+// Sự kiện xác thực quyền giáo viên
+btnTeacherLock.addEventListener('click', () => {
+  if (teacherPanel.style.display === 'block') {
+    if (confirm("Bạn có muốn khóa và ẩn khu vực chức năng của giáo viên không?")) {
+      teacherPanel.style.display = 'none';
+      btnTeacherLock.innerText = "Mở khóa giáo viên";
+      localStorage.removeItem('teacherUnlocked');
+    }
+    return;
+  }
+  const inputEmail = prompt("Vui lòng nhập Email giáo viên được cấp quyền để mở khóa tính năng tùy chỉnh bộ đề:");
+  if (inputEmail && inputEmail.trim().toLowerCase() === AUTHORIZED_TEACHER_EMAIL.toLowerCase()) {
+    alert("Xác thực thành công! Đã mở khóa khu vực chức năng giáo viên.");
+    teacherPanel.style.display = 'block';
+    btnTeacherLock.innerText = "Giáo viên đã mở khóa";
+    localStorage.setItem('teacherUnlocked', 'true');
+  } else if (inputEmail !== null) {
+    alert("Xác thực Email thất bại, bạn không có quyền truy cập chức năng giáo viên!");
+  }
+});
+
+function initSentence(sentenceText) {
+  targetSentence = sentenceText;
+  targetWords = targetSentence.toLowerCase().match(/\b[\w'-]+\b/g) || [];
+  displayWords = targetSentence.split(/(\s+)/);
+  let wordCounter = 0;
+  sentenceBox.innerHTML = displayWords.map(chunk => {
+    if (/\b[\w'-]+\b/.test(chunk)) {
+      const html = `<span class="w-unit pending" id="w-${wordCounter}" data-word="${chunk.toLowerCase().replace(/[^\w'-]/g, '')}">${chunk}</span>`;
+      wordCounter++;
+      return html;
+    }
+    return chunk;
+  }).join('');
+}
+
+function resetScoresAndLoadFirst() {
+  currentSentenceIndex = 0;
+  initSentence(sentenceBank[0]);
+  completionScore.innerText = "0%";
+  accuracyScore.innerText = "0%";
+  attemptCount = 0;
+  attemptCountDisplay.innerText = "0 lần";
+  if (checkFormValidity()) {
+    feedbackMsg.innerText = `Đã tải thành công bộ đề mới (Tổng ${sentenceBank.length} câu), vui lòng nhấn nút ghi âm để bắt đầu luyện tập.`;
+  }
+}
+
+initSentence(targetSentence);
+
+// Tải ngẫu nhiên 5 câu giao tiếp hàng ngày
+btnRandom5.addEventListener('click', () => {
+  const shuffled = [...dailyEnglishPool].sort(() => 0.5 - Math.random());
+  sentenceBank = shuffled.slice(0, 5);
+  bankStatus.innerText = "Bộ đề hiện tại: Tiếng Anh giao tiếp ngẫu nhiên (Tổng 5 câu)";
+  resetScoresAndLoadFirst();
+});
+
+// Tải lên tệp text.txt để tùy chỉnh bộ đề
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const text = event.target.result;
+    const lines = text.split(/\r?\n/).map(line => line.trim().replace(/^"|"$/g, '')).filter(line => line.length > 0);
+    if (lines.length > 0) {
+      sentenceBank = lines;
+      bankStatus.innerText = `Bộ đề hiện tại: Tệp tùy chỉnh ${file.name} (Tổng ${lines.length} câu)`;
+      resetScoresAndLoadFirst();
+    } else {
+      alert("Tệp văn bản tải lên không chứa câu tiếng Anh hợp lệ!");
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+});
+
+btnNext.addEventListener('click', () => {
+  currentSentenceIndex = (currentSentenceIndex + 1) % sentenceBank.length;
+  initSentence(sentenceBank[currentSentenceIndex]);
+  completionScore.innerText = "0%";
+  accuracyScore.innerText = "0%";
+  if (checkFormValidity()) {
+    feedbackMsg.innerText = `Đã chuyển sang câu ${currentSentenceIndex + 1}/${sentenceBank.length}, nhấn nút ghi âm để bắt đầu luyện tập.`;
+  }
+});
+
+function checkFormValidity() {
+  if (studentClass.value.trim() !== "" && studentId.value.trim() !== "" && studentName.value.trim() !== "") {
+    btnMic.disabled = false;
+    if (feedbackMsg.innerText.includes("Vui lòng điền đầy đủ thông tin")) {
+      feedbackMsg.innerText = "Đã điền thông tin cơ bản, nhấn nút bên dưới để bắt đầu ghi âm.";
+    }
+    return true;
+  } else {
+    btnMic.disabled = true;
+    feedbackMsg.innerText = "Vui lòng điền đầy đủ thông tin học sinh ở trên trước khi bắt đầu luyện tập.";
+    return false;
+  }
+}
+
+[studentClass, studentId, studentName].forEach(input => {
+  input.addEventListener('input', checkFormValidity);
+});
+checkFormValidity();
+
+// Đọc mẫu TTS
+btnAudio.addEventListener('click', () => {
+  const synth = window.speechSynthesis;
+  synth.cancel();
+  const utterance = new SpeechSynthesisUtterance(targetSentence);
+  utterance.lang = 'en-US';
+  utterance.rate = 0.85;
+  const voices = synth.getVoices();
+  if (voices.length > 0) {
+    const usVoice = voices.find(v => v.lang.includes('en-US') || v.lang.includes('en_US'));
+    if (usVoice) utterance.voice = usVoice;
+  }
+  synth.speak(utterance);
+});
+
+// Nhận diện giọng nói
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (!SpeechRecognition) {
+  feedbackMsg.innerText = "Trình duyệt của bạn không hỗ trợ nhận diện giọng nói, vui lòng mở bằng Chrome hoặc Safari.";
+  btnMic.disabled = true;
+} else {
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+
+  btnMic.addEventListener('click', () => {
+    if (!checkFormValidity()) return;
+    try { recognition.start(); } catch(e) { recognition.stop(); }
+  });
+
+  recognition.onstart = () => {
+    btnMic.classList.add('recording');
+    btnMic.innerText = "Đang ghi âm học sinh...";
+    feedbackMsg.innerText = `Đang lắng nghe phần phát âm của học sinh [${studentClass.value}] ${studentName.value}...`;
+    for (let i = 0; i < targetWords.length; i++) {
+      const el = document.getElementById(`w-${i}`);
+      if (el) el.className = "w-unit pending";
+    }
+  };
+
+  recognition.onend = () => {
+    btnMic.classList.remove('recording');
+    btnMic.innerText = "Bắt đầu ghi âm luyện tập";
+  };
+
+  recognition.onresult = (event) => {
+    attemptCount++;
+    attemptCountDisplay.innerText = `${attemptCount} lần`;
+    const studentSpeech = event.results[0][0].transcript;
+    const studentWords = studentSpeech.toLowerCase().match(/\b[\w'-]+\b/g) || [];
+    
+    let sIdx = 0;
+    let correctCount = 0;
+    let missingCount = 0;
+    let wrongCount = 0;
+
+    for (let tIdx = 0; tIdx < targetWords.length; tIdx++) {
+      const target = targetWords[tIdx];
+      const el = document.getElementById(`w-${tIdx}`);
+      if (sIdx < studentWords.length) {
+        if (studentWords[sIdx] === target) {
+          if (el) el.className = "w-unit correct";
+          correctCount++;
+          sIdx++;
+        } else {
+          const nextMatchIndex = studentWords.slice(sIdx).indexOf(target);
+          if (nextMatchIndex !== -1) {
+            if (el) el.className = "w-unit missing";
+            missingCount++;
+          } else {
+            if (el) el.className = "w-unit wrong";
+            wrongCount++;
+            sIdx++;
+          }
+        }
+      } else {
+        if (el) el.className = "w-unit missing";
+        missingCount++;
+      }
+    }
+
+    const attemptWordsCount = correctCount + wrongCount;
+    const completionRate = Math.round((attemptWordsCount / targetWords.length) * 100);
+    const accuracyRate = attemptWordsCount > 0 ? Math.round((correctCount / attemptWordsCount) * 100) : 0;
+
+    completionScore.innerText = `${completionRate}%`;
+    accuracyScore.innerText = `${accuracyRate}%`;
+    feedbackMsg.innerHTML = `<div>Đang đồng bộ dữ liệu luyện tập lần thứ ${attemptCount} lên đám mây...</div>`;
+    sendDataToGoogleSheet(completionRate, accuracyRate, studentSpeech, attemptCount, targetSentence);
+  };
+
+  recognition.onerror = (event) => {
+    feedbackMsg.innerText = `Lỗi: ${event.error}. Vui lòng kiểm tra xem bạn đã cấp quyền sử dụng micro chưa.`;
+  };
+}
+
+function sendDataToGoogleSheet(completion, accuracy, transcript, currentAttempt, targetSentenceText) {
+  const payload = {
+    className: studentClass.value.trim(),
+    studentId: studentId.value.trim(),
+    studentName: studentName.value.trim(),
+    attemptCount: currentAttempt,
+    targetSentence: targetSentenceText,
+    completion: completion,
+    accuracy: accuracy,
+    transcript: transcript
+  };
+
+  fetch(GAS_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    feedbackMsg.innerHTML = `
+      <span style="color:var(--success)">Đã đồng bộ thành công kết quả luyện tập lần thứ ${currentAttempt}!</span><br>
+      Học sinh ${studentName.value} thực tế đã đọc: "<span style="color:#7f8c8d; font-style: italic;">${transcript}</span>"
+    `;
+  })
+  .catch(err => {
+    feedbackMsg.innerHTML = `<span style="color:var(--danger)">Đồng bộ đám mây thất bại, vui lòng kiểm tra kết nối mạng.</span>`;
+  });
+}
+</script>
+</body>
+</html>
